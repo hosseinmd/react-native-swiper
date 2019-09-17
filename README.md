@@ -23,6 +23,12 @@
 
 ## Changelogs
 
+- **[current]**
+
+  - Dependency
+    - add ViewPagerAndroid
+  - Resolve RTL
+
 - **[1.6.0-nightly]**
   - Dependency
     - Remove ViewPagerAndroid, use ScrollView #1009
@@ -106,17 +112,10 @@
 
 ### Installation
 
-> v1.5.14
+install react-native-swiper
 
-```bash
-$ npm i react-native-swiper --save
-```
-
-> v1.6.0-nightly
-
-```
-npm i --save react-native-swiper@nightly
-```
+then
+@react-native-community/viewpager
 
 ### Basic Usage
 
