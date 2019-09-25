@@ -7,15 +7,14 @@ import PropTypes from 'prop-types'
 import {
   Text,
   View,
-  ViewPropTypes,
-  ScrollView,
   Dimensions,
   TouchableOpacity,
   Platform,
   ActivityIndicator,
   I18nManager
 } from 'react-native'
-import ViewPagerAndroid from '@react-native-community/viewpager'
+import { SwiperScrollView } from './SwiperScrollView'
+import { Buttons } from './Buttons'
 
 const { width, height } = Dimensions.get('window')
 
@@ -27,15 +26,6 @@ const styles = {
   container: {
     backgroundColor: 'transparent',
     position: 'relative',
-    flex: 1
-  },
-
-  wrapperIOS: {
-    backgroundColor: 'transparent'
-  },
-
-  wrapperAndroid: {
-    backgroundColor: 'transparent',
     flex: 1
   },
 
@@ -284,14 +274,11 @@ export default class extends Component {
 
   loopJump = () => {
     if (!this.state.loopJump) return
+    console.log('loopJump')
     const i = this.state.index + (this.props.loop ? 1 : 0)
     const scrollView = this.refs.scrollView
-    this.loopJumpTimer = setTimeout(
-      () =>
-        scrollView.setPageWithoutAnimation &&
-        scrollView.setPageWithoutAnimation(i),
-      50
-    )
+    scrollView.setPageWithoutAnimation && scrollView.setPageWithoutAnimation(i)
+    console.log('setPageWithoutAnimation')
   }
 
   /**
@@ -336,6 +323,8 @@ export default class extends Component {
    * @param  {object} e native event
    */
   onScrollEnd = e => {
+    console.log('onScrollEnd', e)
+
     // update scroll state
     this.internals.isScrolling = false
 
@@ -591,97 +580,6 @@ export default class extends Component {
     ) : null
   }
 
-  renderNextButton = () => {
-    let button = null
-
-    if (this.props.loop || this.state.index !== this.state.total - 1) {
-      button = this.props.nextButton || (
-        <Text style={styles.buttonText}>
-          {Platform.OS !== 'android' && I18nManager.isRTL ? '‹' : '›'}
-        </Text>
-      )
-    }
-
-    return (
-      <TouchableOpacity
-        onPress={() => button !== null && this.scrollBy(1)}
-        disabled={this.props.disableNextButton}
-      >
-        <View>{button}</View>
-      </TouchableOpacity>
-    )
-  }
-
-  renderPrevButton = () => {
-    let button = null
-
-    if (this.props.loop || this.state.index !== 0) {
-      button = this.props.prevButton || (
-        <Text style={styles.buttonText}>
-          {Platform.OS !== 'android' && I18nManager.isRTL !== 'android'
-            ? '›'
-            : '‹'}
-        </Text>
-      )
-    }
-
-    return (
-      <TouchableOpacity onPress={() => button !== null && this.scrollBy(-1)}>
-        <View>{button}</View>
-      </TouchableOpacity>
-    )
-  }
-
-  renderButtons = () => {
-    return (
-      <View
-        pointerEvents="box-none"
-        style={[
-          styles.buttonWrapper,
-          {
-            width: this.state.width,
-            height: this.state.height
-          },
-          this.props.buttonWrapperStyle
-        ]}
-      >
-        {this.renderPrevButton()}
-        {this.renderNextButton()}
-      </View>
-    )
-  }
-
-  renderScrollView = pages => {
-    if (Platform.OS === 'ios') {
-      return (
-        <ScrollView
-          ref="scrollView"
-          {...this.props}
-          {...this.scrollViewPropOverrides()}
-          contentContainerStyle={[styles.wrapperIOS, this.props.style]}
-          contentOffset={this.state.offset}
-          onScrollBeginDrag={this.onScrollBegin}
-          onMomentumScrollEnd={this.onScrollEnd}
-          onScrollEndDrag={this.onScrollEndDrag}
-        >
-          {pages}
-        </ScrollView>
-      )
-    }
-    return (
-      <ViewPagerAndroid
-        ref="scrollView"
-        {...this.props}
-        initialPage={this.props.loop ? this.state.index + 1 : this.state.index}
-        onPageSelected={this.onScrollEnd}
-        key={pages.length}
-        style={[styles.wrapperAndroid, this.props.style]}
-      >
-        {I18nManager.isRTL ? pages.reverse() : pages}
-      </ViewPagerAndroid>
-    )
-  }
-
   /**
    * Default render
    * @return {object} react-dom
@@ -758,13 +656,37 @@ export default class extends Component {
 
     return (
       <View style={[styles.container, containerStyle]} onLayout={this.onLayout}>
-        {this.renderScrollView(pages)}
+        <SwiperScrollView
+          ref="scrollView"
+          {...this.props}
+          {...this.scrollViewPropOverrides()}
+          contentOffset={this.state.offset}
+          onScrollBeginDrag={this.onScrollBegin}
+          onMomentumScrollEnd={this.onScrollEnd}
+          onScrollEndDrag={this.onScrollEndDrag}
+          index={this.state.index}
+        >
+          {pages}
+        </SwiperScrollView>
         {showsPagination &&
           (renderPagination
             ? renderPagination(index, total, this)
             : this.renderPagination())}
         {this.renderTitle()}
-        {showsButtons && this.renderButtons()}
+        {showsButtons && (
+          <Buttons
+            buttonWrapperStyle={this.props.buttonWrapperStyle}
+            width={this.state.width}
+            height={this.state.height}
+            loop={this.props.loop}
+            index={this.state.index}
+            prevButton={this.props.prevButton}
+            scrollBy={this.scrollBy}
+            total={this.state.total}
+            nextButton={this.props.nextButton}
+            disableNextButton={this.props.disableNextButton}
+          />
+        )}
       </View>
     )
   }
